@@ -1,0 +1,1 @@
+/usr/bin/g++  -g   CMakeFiles/Thread_Test_Demo.dir/Thread_Test_Demo.cpp.o  -o ../Thread_Test_Demo  -lpthread 

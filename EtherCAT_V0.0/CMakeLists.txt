@@ -1,0 +1,8 @@
+cmake_minimum_required(VERSION 3.10)
+project(Demo)
+set(SRC EtherCAT_Demo.c)
+set(EXECUTABLE_OUTPUT_PATH ${CMAKE_CURRENT_LIST_DIR})
+set(CMAKE_C_STANDARD 11)
+link_directories(/opt/etherlab/lib)
+add_executable(EtherCAT_Demo ${SRC})
+target_link_libraries(EtherCAT_Demo ethercat)

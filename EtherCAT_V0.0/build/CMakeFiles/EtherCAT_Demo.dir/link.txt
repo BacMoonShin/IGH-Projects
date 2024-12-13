@@ -1,0 +1,1 @@
+/usr/bin/cc    CMakeFiles/EtherCAT_Demo.dir/EtherCAT_Demo.c.o  -o ../EtherCAT_Demo   -L/opt/etherlab/lib  -Wl,-rpath,/opt/etherlab/lib -lethercat 

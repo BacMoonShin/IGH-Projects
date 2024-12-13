@@ -1,0 +1,7 @@
+[
+{
+  "directory": "/home/rochen/Desktop/code/build",
+  "command": "/usr/bin/g++   -g -std=gnu++11 -o CMakeFiles/temp.dir/temp.cpp.o -c /home/rochen/Desktop/code/temp.cpp",
+  "file": "/home/rochen/Desktop/code/temp.cpp"
+}
+]

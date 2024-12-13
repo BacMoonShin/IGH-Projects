@@ -1,0 +1,29 @@
+{
+  "files.associations": {
+    "deque": "cpp",
+    "string": "cpp",
+    "vector": "cpp",
+    "system_error": "cpp",
+    "*.tcc": "cpp",
+    "type_traits": "cpp",
+    "cstddef": "cpp",
+    "cstdio": "cpp",
+    "cwchar": "cpp",
+    "array": "cpp",
+    "atomic": "cpp",
+    "functional": "cpp",
+    "memory": "cpp",
+    "memory_resource": "cpp",
+    "optional": "cpp",
+    "string_view": "cpp",
+    "tuple": "cpp",
+    "random": "cpp",
+    "fstream": "cpp",
+    "initializer_list": "cpp",
+    "new": "cpp",
+    "stdexcept": "cpp",
+    "typeinfo": "cpp",
+    "utility": "cpp"
+  },
+"editor.fontFamily": "'Cascadia Code',Consolas,'Courier New',Fira Code,monospace,HarmonyOS Sans SC"
+}

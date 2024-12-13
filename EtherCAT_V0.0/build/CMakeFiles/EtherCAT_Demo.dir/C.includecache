@@ -1,0 +1,22 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/imc/Desktop/EtherCAT/EtherCAT_Demo.c
+stdio.h
+-
+stdlib.h
+-
+ecrt.h
+-
+math.h
+-
+stdbool.h
+-
+unistd.h
+-
+

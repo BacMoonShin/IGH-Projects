@@ -1,0 +1,26 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/imc/Desktop/Code/Thread_Test_Demo.cpp
+iostream
+-
+pthread.h
+-
+sched.h
+-
+unistd.h
+-
+ctime
+-
+iomanip
+-
+mutex
+-
+chrono
+-
+

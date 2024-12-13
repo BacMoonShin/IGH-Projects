@@ -1,0 +1,32 @@
+[
+{
+  "directory": "/media/imc/DataDisk/EtherCAT_Elmo/build",
+  "command": "/usr/bin/g++    -g   -std=gnu++11 -o CMakeFiles/EtherCAT_Demo.dir/EL2889.cpp.o -c /media/imc/DataDisk/EtherCAT_Elmo/EL2889.cpp",
+  "file": "/media/imc/DataDisk/EtherCAT_Elmo/EL2889.cpp"
+},
+{
+  "directory": "/media/imc/DataDisk/EtherCAT_Elmo/build",
+  "command": "/usr/bin/g++    -g   -std=gnu++11 -o CMakeFiles/EtherCAT_Demo.dir/Elmo.cpp.o -c /media/imc/DataDisk/EtherCAT_Elmo/Elmo.cpp",
+  "file": "/media/imc/DataDisk/EtherCAT_Elmo/Elmo.cpp"
+},
+{
+  "directory": "/media/imc/DataDisk/EtherCAT_Elmo/build",
+  "command": "/usr/bin/g++    -g   -std=gnu++11 -o CMakeFiles/EtherCAT_Demo.dir/EtherCAT_Demo.cpp.o -c /media/imc/DataDisk/EtherCAT_Elmo/EtherCAT_Demo.cpp",
+  "file": "/media/imc/DataDisk/EtherCAT_Elmo/EtherCAT_Demo.cpp"
+},
+{
+  "directory": "/media/imc/DataDisk/EtherCAT_Elmo/build",
+  "command": "/usr/bin/g++    -g   -std=gnu++11 -o CMakeFiles/EtherCAT_Demo.dir/EtherCAT_Global.cpp.o -c /media/imc/DataDisk/EtherCAT_Elmo/EtherCAT_Global.cpp",
+  "file": "/media/imc/DataDisk/EtherCAT_Elmo/EtherCAT_Global.cpp"
+},
+{
+  "directory": "/media/imc/DataDisk/EtherCAT_Elmo/build",
+  "command": "/usr/bin/g++    -g   -std=gnu++11 -o CMakeFiles/EtherCAT_Demo.dir/EtherCAT_Master.cpp.o -c /media/imc/DataDisk/EtherCAT_Elmo/EtherCAT_Master.cpp",
+  "file": "/media/imc/DataDisk/EtherCAT_Elmo/EtherCAT_Master.cpp"
+},
+{
+  "directory": "/media/imc/DataDisk/EtherCAT_Elmo/build",
+  "command": "/usr/bin/g++    -g   -std=gnu++11 -o CMakeFiles/EtherCAT_Demo.dir/HC_SV660N.cpp.o -c /media/imc/DataDisk/EtherCAT_Elmo/HC_SV660N.cpp",
+  "file": "/media/imc/DataDisk/EtherCAT_Elmo/HC_SV660N.cpp"
+}
+]

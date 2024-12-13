@@ -1,0 +1,1 @@
+/usr/bin/c++  -g   CMakeFiles/EtherCAT_Demo.dir/EL2889.cpp.o CMakeFiles/EtherCAT_Demo.dir/EtherCAT_Demo.cpp.o CMakeFiles/EtherCAT_Demo.dir/EtherCAT_Master.cpp.o  -o ../EtherCAT_Demo   -L/opt/etherlab/lib  -Wl,-rpath,/opt/etherlab/lib -lethercat 
