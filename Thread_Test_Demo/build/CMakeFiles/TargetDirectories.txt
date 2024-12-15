@@ -1,3 +1,0 @@
-/home/imc/Desktop/Code/build/CMakeFiles/edit_cache.dir
-/home/imc/Desktop/Code/build/CMakeFiles/rebuild_cache.dir
-/home/imc/Desktop/Code/build/CMakeFiles/Thread_Test_Demo.dir

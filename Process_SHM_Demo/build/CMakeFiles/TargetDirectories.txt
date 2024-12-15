@@ -1,3 +1,0 @@
-/home/rochen/Desktop/code/build/CMakeFiles/temp.dir
-/home/rochen/Desktop/code/build/CMakeFiles/edit_cache.dir
-/home/rochen/Desktop/code/build/CMakeFiles/rebuild_cache.dir
