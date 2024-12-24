@@ -8,26 +8,19 @@ EtherCAT_Master::~EtherCAT_Master(){}
 
 void EtherCAT_Master::EtherCAT_Master_Config(){
     EtherCAT_Master_Init();
-
-    for(int i = 0; i < Slaves.size(); ++i){
-        EtherCAT_Master_Config_Slave(Slaves[i], i);
+    EtherCAT_Master_Config_Slave_Domain();
+    EtherCAT_Master_Config_Slave_Info();
+    EtherCAT_Master_Config_Slave_PDO();
+    EtherCAT_Master_Config_Slave_PDO_Entry();
 #ifdef ENABLE_DC
-        EtherCAT_Master_Config_Slave_DC(Slaves[i], i);
+    EtherCAT_Master_Config_Slave_DC();
+    ecrt_master_select_reference_clock(master, NULL);
 #endif
 #ifdef ENABLE_SDO
-        EtherCAT_Master_Config_Slave_SDO(Slaves[i], i);
+    EtherCAT_Master_Config_Slave_SDO();
 #endif
-    }
-
-#ifdef ENABLE_DC
-        ecrt_master_select_reference_clock(master, NULL);
-#endif
-
     EtherCAT_Master_Activate();
-
-    for(int i = 0; i < Slaves.size(); ++i){
-        EtherCAT_Get_PD_For_Slave(Slaves[i], i);
-    }
+    EtherCAT_Get_PD_For_Slave();
 }
 
 void EtherCAT_Master::EtherCAT_Check_States(){
@@ -84,76 +77,105 @@ void EtherCAT_Master::EtherCAT_Master_Init(){
     ++_Master_Number_;
 }
 
-void EtherCAT_Master::EtherCAT_Master_Config_Slave(EtherCAT_Slave_Base * _Slave, int _Slave_Index){
-    // 创建域domain
-    _Slave->domain = ecrt_master_create_domain(master);
-    if (!_Slave->domain)
-    {
-        ETHERCAT_ERROR("*Failed to create master domain for slave %d!*", _Slave_Index);
-    }
-    else
-    {
-        ETHERCAT_MESSAGE("*Success to create master domain for slave %d*", _Slave_Index);
-    }
-
-    // 配置从站
-    if (!(_Slave->slave_config = ecrt_master_slave_config(master, _Slave->alias, _Slave->position, _Slave->vendor_id, _Slave->product_code)))
-    {
-        ETHERCAT_ERROR("*Failed to get slave configuration for slave %d!*", _Slave_Index);
-    }
-    else
-    {
-        ETHERCAT_MESSAGE("*Success to get slave configuration for slave %d*", _Slave_Index);
-    }
-
-    // 对从站进行配置PDOs
-    // ETHERCAT_INFO("Configuring PDOs...");
-    if (ecrt_slave_config_pdos(_Slave->slave_config, EC_END, _Slave->syncs))
-    {
-        ETHERCAT_ERROR("*Failed to configure PDOs for slave %d!*", _Slave_Index);
-    }
-    else
-    {
-        ETHERCAT_MESSAGE("*Success to configuring PDOs for slave %d*", _Slave_Index);
-    }
-
-    // 注册PDO entry
-    if (ecrt_domain_reg_pdo_entry_list(_Slave->domain, _Slave->domain_regs))
-    {
-        ETHERCAT_ERROR("*PDO entry registration failed for slave %d!*", _Slave_Index);
-    }
-    else
-    {
-        ETHERCAT_MESSAGE("*Success to configuring PDO entry for slave %d*", _Slave_Index);
-    }
-}
-
-void EtherCAT_Master::EtherCAT_Master_Config_Slave_DC(EtherCAT_Slave_Base * _Slave, int _Slave_Index){
-    ecrt_slave_config_dc(_Slave->slave_config, _Slave->assign_activate_word, TASK_PERIOD_NS, SHIFT_NS, 0, 0);
-    ETHERCAT_MESSAGE("*Success to config DC Clock for Slave %d*", _Slave_Index);
-}
-
-void EtherCAT_Master::EtherCAT_Master_Config_Slave_SDO(EtherCAT_Slave_Base * _Slave, int _Slave_Index){
-    // 该处也可以使用 ecrt_slave_config_sdo 函数进行配置
-    if((*(_Slave->sdo_config_regs)).index != 0){
-        const ec_sdo_config_reg_t *sdo_config_reg = _Slave->sdo_config_regs;
-        while((*sdo_config_reg).index != 0){
-            // if(0 > ecrt_master_sdo_download(master, Slave->position, (*sdo_config_reg).index, (*sdo_config_reg).subindex, (*sdo_config_reg).data, (*sdo_config_reg).data_size, (*sdo_config_reg).abort_code))
-            // {
-            //     ETHERCAT_ERROR("*Config SDO %04X %04X error! Abort code: %04X*", (*sdo_config_reg).index, (*sdo_config_reg).subindex, *((*sdo_config_reg).abort_code));
-            // }
-            if(0 > ecrt_slave_config_sdo(_Slave->slave_config, (*sdo_config_reg).index, (*sdo_config_reg).subindex, (*sdo_config_reg).data, (*sdo_config_reg).data_size)
-            )
-            {
-                ETHERCAT_ERROR("*Config SDO %04X %02X error!*", (*sdo_config_reg).index, (*sdo_config_reg).subindex);
-            }
-            sdo_config_reg++;
+void EtherCAT_Master::EtherCAT_Master_Config_Slave_Domain(){
+    EtherCAT_Slave_Base * Slave;
+    for(int i = 0; i < Slaves.size(); ++i){
+        // 创建域domain
+        Slave = Slaves[i];
+        Slave->domain = ecrt_master_create_domain(master);
+        if (!Slave->domain)
+        {
+            ETHERCAT_ERROR("*Failed to create master domain for slave %d!*", i);
         }
-        ETHERCAT_MESSAGE("*Success to config SDO for Slave %d*", _Slave_Index);
+        else
+        {
+            ETHERCAT_MESSAGE("*Success to create master domain for slave %d*", i);
+        }
     }
-    else
-    {
-        ETHERCAT_WARNING("*Slave %d has no SDO to config*", _Slave_Index);
+}
+
+void EtherCAT_Master::EtherCAT_Master_Config_Slave_Info(){
+    EtherCAT_Slave_Base * Slave;
+    for(int i = 0; i < Slaves.size(); ++i){
+        Slave = Slaves[i];
+        // 配置从站
+        if (!(Slave->slave_config = ecrt_master_slave_config(master, Slave->alias, Slave->position, Slave->vendor_id, Slave->product_code)))
+        {
+            ETHERCAT_ERROR("*Failed to get slave configuration for slave %d!*", i);
+        }
+        else
+        {
+            ETHERCAT_MESSAGE("*Success to get slave configuration for slave %d*", i);
+        }
+    }
+}
+
+void EtherCAT_Master::EtherCAT_Master_Config_Slave_PDO(){
+    EtherCAT_Slave_Base * Slave;
+    for(int i = 0; i < Slaves.size(); ++i){
+        Slave = Slaves[i];
+        // 对从站进行配置PDOs
+        if (ecrt_slave_config_pdos(Slave->slave_config, EC_END, Slave->syncs))
+        {
+            ETHERCAT_ERROR("*Failed to configure PDOs for slave %d!*", i);
+        }
+        else
+        {
+            ETHERCAT_MESSAGE("*Success to configuring PDOs for slave %d*", i);
+        }
+    }
+}
+
+void EtherCAT_Master::EtherCAT_Master_Config_Slave_PDO_Entry(){
+    EtherCAT_Slave_Base * Slave;
+    for(int i = 0; i < Slaves.size(); ++i){
+        Slave = Slaves[i];
+        // 注册PDO entry
+        if (ecrt_domain_reg_pdo_entry_list(Slave->domain, Slave->domain_regs))
+        {
+            ETHERCAT_ERROR("*PDO entry registration failed for slave %d!*", i);
+        }
+        else
+        {
+            ETHERCAT_MESSAGE("*Success to configuring PDO entry for slave %d*", i);
+        }
+    }
+}
+
+void EtherCAT_Master::EtherCAT_Master_Config_Slave_DC(){
+    EtherCAT_Slave_Base * Slave;
+    for(int i = 0; i < Slaves.size(); ++i){
+        Slave = Slaves[i];
+        ecrt_slave_config_dc(Slave->slave_config, Slave->assign_activate_word, TASK_PERIOD_NS, SHIFT_NS, 0, 0);
+        ETHERCAT_MESSAGE("*Success to config DC Clock for Slave %d*", i);
+    }
+}
+
+void EtherCAT_Master::EtherCAT_Master_Config_Slave_SDO(){
+    EtherCAT_Slave_Base * Slave;
+    for(int i = 0; i < Slaves.size(); ++i){
+        Slave = Slaves[i];
+        // 该处也可以使用 ecrt_slave_config_sdo 函数进行配置
+        if((*(Slave->sdo_config_regs)).index != 0){
+            const ec_sdo_config_reg_t *sdo_config_reg = Slave->sdo_config_regs;
+            while((*sdo_config_reg).index != 0){
+                // if(0 > ecrt_master_sdo_download(master, Slave->position, (*sdo_config_reg).index, (*sdo_config_reg).subindex, (*sdo_config_reg).data, (*sdo_config_reg).data_size, (*sdo_config_reg).abort_code))
+                // {
+                //     ETHERCAT_ERROR("*Config SDO %04X %02X error! Abort code: %04X*", (*sdo_config_reg).index, (*sdo_config_reg).subindex, *((*sdo_config_reg).abort_code));
+                // }
+                if(0 > ecrt_slave_config_sdo(Slave->slave_config, (*sdo_config_reg).index, (*sdo_config_reg).subindex, (*sdo_config_reg).data, (*sdo_config_reg).data_size)
+                )
+                {
+                    ETHERCAT_ERROR("*Config SDO %04X %02X error!*", (*sdo_config_reg).index, (*sdo_config_reg).subindex);
+                }
+                sdo_config_reg++;
+            }
+            ETHERCAT_MESSAGE("*Success to config SDO for Slave %d*", i);
+        }
+        else
+        {
+            ETHERCAT_WARNING("*Slave %d has no SDO to config*", i);
+        }
     }
 }
 
@@ -174,13 +196,17 @@ void EtherCAT_Master::EtherCAT_Master_Deactivate(){
     ecrt_master_deactivate(master);
 }
 
-void EtherCAT_Master::EtherCAT_Get_PD_For_Slave(EtherCAT_Slave_Base * _Slave, int _Slave_Index){
-    if (!(_Slave->domain_pd = ecrt_domain_data(_Slave->domain))){
-        ETHERCAT_ERROR("*Get domain_pd failed for slave %d!*", _Slave_Index);
-    }
-    else
-    {
-        ETHERCAT_MESSAGE("*Success to get domain_pd for slave %d*", _Slave_Index);
+void EtherCAT_Master::EtherCAT_Get_PD_For_Slave(){
+    EtherCAT_Slave_Base * Slave;
+    for(int i = 0; i < Slaves.size(); ++i){
+        Slave = Slaves[i];
+        if (!(Slave->domain_pd = ecrt_domain_data(Slave->domain))){
+            ETHERCAT_ERROR("*Get domain_pd failed for slave %d!*", i);
+        }
+        else
+        {
+            ETHERCAT_MESSAGE("*Success to get domain_pd for slave %d*", i);
+        }
     }
 }
 

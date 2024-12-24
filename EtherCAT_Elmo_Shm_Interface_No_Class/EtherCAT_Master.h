@@ -1,4 +1,3 @@
-#include <vector>
 #include "EtherCAT_Global.h"
 
 #ifndef _ETHERCAT_MASTER_H_
@@ -27,12 +26,15 @@ class EtherCAT_Master
 
   private:
     void EtherCAT_Master_Init();
-    void EtherCAT_Master_Config_Slave(EtherCAT_Slave_Base * _Slave, int _Slave_Index);
-    void EtherCAT_Master_Config_Slave_DC(EtherCAT_Slave_Base * _Slave, int _Slave_Index);
-    void EtherCAT_Master_Config_Slave_SDO(EtherCAT_Slave_Base * _Slave, int _Slave_Index);
+    void EtherCAT_Master_Config_Slave_Domain();
+    void EtherCAT_Master_Config_Slave_Info();
+    void EtherCAT_Master_Config_Slave_PDO();
+    void EtherCAT_Master_Config_Slave_PDO_Entry();
+    void EtherCAT_Master_Config_Slave_DC();
+    void EtherCAT_Master_Config_Slave_SDO();
     void EtherCAT_Master_Activate();
     void EtherCAT_Master_Deactivate();
-    void EtherCAT_Get_PD_For_Slave(EtherCAT_Slave_Base * _Slave, int _Slave_Index);
+    void EtherCAT_Get_PD_For_Slave();
     void Check_Domain_State(ec_domain_t *_Domain, ec_domain_state_t *_Domain_State, int _Slave_Index);
     void Check_Master_State(ec_master_t *_Master, ec_master_state_t *_Master_State);
     void Check_Slave_Config_States(ec_slave_config_t *_Slave, ec_slave_config_state_t *_Slave_State, int _Slave_Index);
