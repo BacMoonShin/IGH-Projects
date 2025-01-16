@@ -61,16 +61,14 @@ void* EtherCAT_Thread(void *_arg)
                 ETHERCAT_INFO("Elmo1: act position = %d, act torque = %d, status = 0x%x, drive_state = %d, drive_mode = %d",
                               Elmo1.domain_data.TxPDO.current_position, Elmo1.domain_data.TxPDO.torque_input, Elmo1.domain_data.TxPDO.status_word, Elmo1.data.drive_state, Elmo1.data.drive_mode);
                 ETHERCAT_INFO("Actual Period Time: %ld", TIMESPEC2NS(actualPeriodTime));
-                // ETHERCAT_INFO("Wakeup Time: %ld", TIMESPEC2NS(wakeupTime));
-                // ETHERCAT_INFO("end Time: %ld", TIMESPEC2NS(endTime));
             }
 #endif
 #ifdef _ELMO_2_ENABLE_
             // if(Elmo2.data.drive_state == dsOperationEnabled)
-            // {
-            //     ETHERCAT_INFO("Elmo2: act position = %d, act torque = %d, status = 0x%x, drive_state = %d, drive_mode =%d",
-            //                   Elmo2.domain_data.TxPDO.current_position, Elmo2.domain_data.TxPDO.torque_input, Elmo2.domain_data.TxPDO.status_word, Elmo2.data.drive_state，Elmo2.data.drive_mode);
-            // }
+            {
+                ETHERCAT_INFO("Elmo2: act position = %d, act torque = %d, status = 0x%x, drive_state = %d, drive_mode =%d",
+                              Elmo2.domain_data.TxPDO.current_position, Elmo2.domain_data.TxPDO.torque_input, Elmo2.domain_data.TxPDO.status_word, Elmo2.data.drive_state，Elmo2.data.drive_mode);
+            }
 #endif
             printCount = PRINT_COUNT;
         }

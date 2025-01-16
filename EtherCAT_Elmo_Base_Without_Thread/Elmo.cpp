@@ -1,6 +1,7 @@
 #include "Elmo.h"
 
-ec_pdo_entry_info_t ELMO::ELMO_pdo_entries[11] = {/*RxPDO 0x1600 */
+ec_pdo_entry_info_t ELMO::ELMO_pdo_entries[11] = {
+                                                  /*RxPDO 0x1600 */
                                                   {TARGET_POSITION, 32},
                                                   {DO_STATUS, 32},
                                                   {CTRL_WORD, 16},
@@ -8,12 +9,12 @@ ec_pdo_entry_info_t ELMO::ELMO_pdo_entries[11] = {/*RxPDO 0x1600 */
                                                   {CTRL_WORD, 16},
                                                   {TARGET_POSITION, 32},
                                                   /* TxPDO 0x1A00 */
-                                                  {ACTUAL_POSITION, 32},
+                                                  {CURRENT_POSITION, 32},
                                                   {DI_STATUS, 32},
                                                   {STATUS_WORD, 16},
                                                   /* TxPDO 0x1A07 */
                                                   {STATUS_WORD, 16},
-                                                  {ACTUAL_POSITION, 32},
+                                                  {CURRENT_POSITION, 32},
                                                   {ANALOG_INPUT, 16},
                                                   };
 ec_pdo_info_t ELMO::ELMO_pdos[4] = {// RxPDO
@@ -87,7 +88,7 @@ ELMO::ELMO(EtherCAT_Master& _Master, const uint16_t& _Alias, const uint16_t& _Po
 }
 
 void ELMO::Check_Motor_State(int _DeviceNumber) noexcept{
-    if(data.drive_state != data.motor_last_state){
+    if(data.drive_state != motor_last_state){
         switch(data.drive_state){
             case dsNotReadyToSwitchOn:
                 ETHERCAT_INFO("*ELMO %d: dsNotReadyToSwitchOn*", _DeviceNumber);
@@ -117,7 +118,7 @@ void ELMO::Check_Motor_State(int _DeviceNumber) noexcept{
                 ETHERCAT_CRITICAL("*ELMO %d Motor state Error!*", _DeviceNumber);
                 break;
         }
-        data.motor_last_state = data.drive_state;
+        motor_last_state = data.drive_state;
     }
 }
 
@@ -198,10 +199,10 @@ void ELMO::Enable_Motor(const DRIVERMODE _DriveMode) noexcept{
                 // EC_WRITE_S8(domain_pd + domain_offset.RxPDO.operation_mode, domain_data.RxPDO.operation_mode);
                 EC_WRITE_U16(domain_pd + domain_offset.RxPDO.ctrl_word, 0x000f); // enable operation
                 // ETHERCAT_MESSAGE("*Change ELMO state to dsOperationEnabled*");
-                domain_data.RxPDO.target_position = domain_data.TxPDO.actual_position; // 将当前位置复制给目标位置，防止使能后电机震动
+                domain_data.RxPDO.target_position = domain_data.TxPDO.current_position; // 将当前位置复制给目标位置，防止使能后电机震动
                 if(data.get_origin_point == true)
                 {
-                    data.move_origin_point = domain_data.TxPDO.actual_position;
+                    data.move_origin_point = domain_data.TxPDO.current_position;
                     data.get_origin_point == false;
                 }
                 EC_WRITE_S32(domain_pd + domain_offset.RxPDO.target_position, domain_data.RxPDO.target_position);
@@ -224,23 +225,23 @@ void ELMO::Move_Motor_Home() noexcept{
     // 开始回零
 
     // **************************  启用自定义运动原点 ****************************
-    /* if (domain_data.TxPDO.actual_position - data.move_origin_point > 0)
+    /* if (domain_data.TxPDO.current_position - data.move_origin_point > 0)
     {
-        domain_data.RxPDO.target_position = domain_data.TxPDO.actual_position - (int32_t)HOME_STEP;
+        domain_data.RxPDO.target_position = domain_data.TxPDO.current_position - (int32_t)HOME_STEP;
         if (domain_data.RxPDO.target_position - data.move_origin_point< 0)
         {
             domain_data.RxPDO.target_position = data.move_origin_point;
         }
     }
-    else if (domain_data.TxPDO.actual_position - data.move_origin_point< 0)
+    else if (domain_data.TxPDO.current_position - data.move_origin_point< 0)
         {
-            domain_data.RxPDO.target_position = domain_data.TxPDO.actual_position + (int32_t)HOME_STEP;
+            domain_data.RxPDO.target_position = domain_data.TxPDO.current_position + (int32_t)HOME_STEP;
             if (domain_data.RxPDO.target_position - data.move_origin_point> 0)
             {
                 domain_data.RxPDO.target_position = data.move_origin_point;
             }
         }
-    else if (domain_data.TxPDO.actual_position == data.move_origin_point)
+    else if (domain_data.TxPDO.current_position == data.move_origin_point)
         {
             domain_data.RxPDO.target_position = data.move_origin_point;
             data.reset_busy = true;
@@ -254,33 +255,31 @@ void ELMO::Move_Motor_Home() noexcept{
 
 
     // ****************************  启用绝对值原点 *****************************
-    if (domain_data.TxPDO.actual_position > 0)
+    if (domain_data.TxPDO.current_position > 0)
     {
-        // domain_data.RxPDO.target_position = domain_data.TxPDO.actual_position - (int32_t)HOME_STEP;
-        domain_data.RxPDO.target_position -= (int32_t)HOME_STEP;
+        domain_data.RxPDO.target_position = domain_data.TxPDO.current_position - (int32_t)HOME_STEP;
         if (domain_data.RxPDO.target_position < 0)
         {
             domain_data.RxPDO.target_position = 0;
         }
     }
-    else if (domain_data.TxPDO.actual_position < 0)
-    {
-        // domain_data.RxPDO.target_position = domain_data.TxPDO.actual_position + (int32_t)HOME_STEP;
-        domain_data.RxPDO.target_position += (int32_t)HOME_STEP;
-        if (domain_data.RxPDO.target_position > 0)
+    else if (domain_data.TxPDO.current_position < 0)
+        {
+            domain_data.RxPDO.target_position = domain_data.TxPDO.current_position + (int32_t)HOME_STEP;
+            if (domain_data.RxPDO.target_position > 0)
+            {
+                domain_data.RxPDO.target_position = 0;
+            }
+        }
+    else if (domain_data.TxPDO.current_position == 0)
         {
             domain_data.RxPDO.target_position = 0;
+            data.reset_busy = true;
+            data.power_busy = false;
+            data.quickstop_busy = false;
+            data.home_busy = false; // 回零结束
+            data.position_move_enable = false;
         }
-    }
-    else if (domain_data.TxPDO.actual_position == 0)
-    {
-        domain_data.RxPDO.target_position = 0;
-        data.reset_busy = true;
-        data.power_busy = false;
-        data.quickstop_busy = false;
-        data.home_busy = false; // 回零结束
-        data.position_move_enable = false;
-    }
     EC_WRITE_S32(domain_pd + domain_offset.RxPDO.target_position, domain_data.RxPDO.target_position);
      // ****************************  启用绝对值原点 *****************************
 }
@@ -295,8 +294,8 @@ void ELMO::Read_Data() noexcept{
         case 0x1A07:
             domain_data.TxPDO.status_word =
                 EC_READ_U16(domain_pd + domain_offset.TxPDO.status_word);
-            domain_data.TxPDO.actual_position =
-                EC_READ_S32(domain_pd + domain_offset.TxPDO.actual_position);
+            domain_data.TxPDO.current_position =
+                EC_READ_S32(domain_pd + domain_offset.TxPDO.current_position);
             // domain_data.TxPDO.di_status =
             //     EC_READ_U32(domain_pd + domain_offset.TxPDO.di_status);
             domain_data.TxPDO.torque_input =
@@ -307,8 +306,8 @@ void ELMO::Read_Data() noexcept{
          case 0x1A00:
             domain_data.TxPDO.status_word =
                 EC_READ_U16(domain_pd + domain_offset.TxPDO.status_word);
-            domain_data.TxPDO.actual_position =
-                EC_READ_S32(domain_pd + domain_offset.TxPDO.actual_position);
+            domain_data.TxPDO.current_position =
+                EC_READ_S32(domain_pd + domain_offset.TxPDO.current_position);
             domain_data.TxPDO.di_status =
                 EC_READ_U32(domain_pd + domain_offset.TxPDO.di_status);
             // domain_data.TxPDO.torque_input =
@@ -396,7 +395,7 @@ void ELMO::Get_PDO_Entry_Reg() noexcept{
             ELMO_domain_regs[++count] =
             (ec_pdo_entry_reg_t){alias, position, vendor_id, product_code, STATUS_WORD, &domain_offset.TxPDO.status_word, NULL};
             ELMO_domain_regs[++count] =
-            (ec_pdo_entry_reg_t){alias, position, vendor_id, product_code, ACTUAL_POSITION, &domain_offset.TxPDO.actual_position, NULL};
+            (ec_pdo_entry_reg_t){alias, position, vendor_id, product_code, CURRENT_POSITION, &domain_offset.TxPDO.current_position, NULL};
             // ELMO_domain_regs[++count] =
             // (ec_pdo_entry_reg_t){alias, position, vendor_id, product_code, DI_STATUS, &domain_offset.TxPDO.di_status, NULL};
             ELMO_domain_regs[++count] =
@@ -410,7 +409,7 @@ void ELMO::Get_PDO_Entry_Reg() noexcept{
             ELMO_domain_regs[++count] =
             (ec_pdo_entry_reg_t){alias, position, vendor_id, product_code, STATUS_WORD, &domain_offset.TxPDO.status_word, NULL};
             ELMO_domain_regs[++count] =
-            (ec_pdo_entry_reg_t){alias, position, vendor_id, product_code, ACTUAL_POSITION, &domain_offset.TxPDO.actual_position, NULL};
+            (ec_pdo_entry_reg_t){alias, position, vendor_id, product_code, CURRENT_POSITION, &domain_offset.TxPDO.current_position, NULL};
             ELMO_domain_regs[++count] =
             (ec_pdo_entry_reg_t){alias, position, vendor_id, product_code, DI_STATUS, &domain_offset.TxPDO.di_status, NULL};
             // ELMO_domain_regs[++count] =
@@ -463,25 +462,25 @@ void ELMO::Get_Sync_Info() noexcept{
 void ELMO::Get_SDO_Config_Reg() noexcept{
     int count = -1;
     ELMO_sdo_config_regs[++count] =
-    (ec_sdo_config_reg_t){0x6091, 0x01, (uint8_t*)&sdo_data.gear_ratio_num_0x6091_0x01, 4, &data.abort_code};
+    (ec_sdo_config_reg_t){0x6091, 0x01, &sdo_data.gear_ratio_num_0x6091_0x01, 4, &data.abort_code};
     ELMO_sdo_config_regs[++count] =
-    (ec_sdo_config_reg_t){0x6091, 0x02, (uint8_t*)&sdo_data.gear_ratio_den_0x6091_0x02, 4, &data.abort_code};
+    (ec_sdo_config_reg_t){0x6091, 0x02, &sdo_data.gear_ratio_den_0x6091_0x02, 4, &data.abort_code};
     ELMO_sdo_config_regs[++count] =
-    (ec_sdo_config_reg_t){0x6092, 0x01, (uint8_t*)&sdo_data.feed_constant_num_0x6092_0x01, 4, &data.abort_code};
+    (ec_sdo_config_reg_t){0x6092, 0x01, &sdo_data.feed_constant_num_0x6092_0x01, 4, &data.abort_code};
     ELMO_sdo_config_regs[++count] =
-    (ec_sdo_config_reg_t){0x6092, 0x02, (uint8_t*)&sdo_data.feed_constant_den_0x6092_0x02, 4, &data.abort_code};
+    (ec_sdo_config_reg_t){0x6092, 0x02, &sdo_data.feed_constant_den_0x6092_0x02, 4, &data.abort_code};
     ELMO_sdo_config_regs[++count] =
-    (ec_sdo_config_reg_t){0x608F, 0x01, (uint8_t*)&sdo_data.position_encoder_resolution_num_0x608F_0x01, 4, &data.abort_code};
+    (ec_sdo_config_reg_t){0x608F, 0x01, &sdo_data.position_encoder_resolution_num_0x608F_0x01, 4, &data.abort_code};
     ELMO_sdo_config_regs[++count] =
-    (ec_sdo_config_reg_t){0x608F, 0x02, (uint8_t*)&sdo_data.position_encoder_resolution_den_0x608F_0x02, 4, &data.abort_code};
+    (ec_sdo_config_reg_t){0x608F, 0x02, &sdo_data.position_encoder_resolution_den_0x608F_0x02, 4, &data.abort_code};
     ELMO_sdo_config_regs[++count] =
-    (ec_sdo_config_reg_t){0x6096, 0x01, (uint8_t*)&sdo_data.velocity_factor_num_0x6096_0x01, 4, &data.abort_code};
+    (ec_sdo_config_reg_t){0x6096, 0x01, &sdo_data.velocity_factor_num_0x6096_0x01, 4, &data.abort_code};
     ELMO_sdo_config_regs[++count] =
-    (ec_sdo_config_reg_t){0x6096, 0x02, (uint8_t*)&sdo_data.velocity_factor_den_0x6096_0x02, 4, &data.abort_code};
+    (ec_sdo_config_reg_t){0x6096, 0x02, &sdo_data.velocity_factor_den_0x6096_0x02, 4, &data.abort_code};
     ELMO_sdo_config_regs[++count] =
-    (ec_sdo_config_reg_t){0x606A, 0x00, (uint8_t*)&sdo_data.sensor_selection_code_0x606A_0x00, 2, &data.abort_code};
+    (ec_sdo_config_reg_t){0x606A, 0x00, &sdo_data.sensor_selection_code_0x606A_0x00, 2, &data.abort_code};
     ELMO_sdo_config_regs[++count] =
-    (ec_sdo_config_reg_t){0x6060, 0x00, (uint8_t*)&sdo_data.operation_mode_0x6060_0x00, 1, &data.abort_code};
+    (ec_sdo_config_reg_t){0x6060, 0x00, &sdo_data.operation_mode_0x6060_0x00, 1, &data.abort_code};
     ELMO_sdo_config_regs[++count] =
     (ec_sdo_config_reg_t){0};
 

@@ -1,7 +1,7 @@
-#include "EtherCAT_Global.h"
-
 #ifndef _ETHERCAT_SLAVE_H_
 #define _ETHERCAT_SLAVE_H_
+
+#include "EtherCAT_Global.h"
 
 // CoE对象字典
 #define RXPDO 0x1600   // RxPDO的映射表在对象字典中的索引位置
@@ -10,15 +10,16 @@
 /*CiA 402数据对象(Data Object)*/
 #define ANALOG_INPUT 0x2205, 0x01                // 模拟量输入
 
-#define ERROR_CODE 0x603F, 0x00                 // 错误码
+#define ERROR_CODE 0x603F, 0x00                  // 错误码
 #define CTRL_WORD 0x6040, 0x00                   // 控制字
 #define STATUS_WORD 0x6041, 0x00                 // 状态字
 #define OPERATION_MODE 0x6060, 0x00              // 设定运行模式
 #define MODE_DISPLAY 0x6061, 0x00                // 当前运行模式
-#define ACTUAL_POSITION 0x6064, 0x00            // 当前位置
-#define ACTUAL_VELOCITY 0x606C, 0x00            // 当前速度
+#define CURRENT_POSITION 0x6064, 0x00            // 当前位置
+#define CURRENT_VELOCITY 0x606C, 0x00            // 当前速度
 #define TARGET_TORQUE 0x6071, 0x00               // 目标转矩
-#define ACTUAL_TORQUE 0x6077, 0x00              // 当前转矩
+#define MAX_CURRENT 0x6073, 0x00                 // 最大电流
+#define CURRENT_TORQUE 0x6077, 0x00              // 当前转矩
 #define TARGET_POSITION 0x607A, 0x00             // 目标位置
 #define MAX_SPEED 0x607F, 0x00                   // 最大转速
 #define MOTOR_RESOLUTION 0x6091, 0x01            // 电机分辨率
@@ -39,7 +40,7 @@ enum DRIVERSTATE
     dsSwitchOnDisabled,       // 初始化 完成状态
     dsReadyToSwitchOn,        // 主电路电源OFF状态
     dsSwitchedOn,             // 伺服OFF/伺服准备
-    dsOperationEnabled,       // 伺服ON
+    dsOperationEnabled,       // 伺服使能
     dsQuickStopActive,        // 快速停机状态
     dsFaultReactionActive,    // 异常（报警）判断
     dsFault                   // 异常（报警）状态
@@ -60,9 +61,9 @@ enum DRIVERMODE
 struct ec_sdo_config_reg{
     uint16_t index;
     uint8_t subindex;
-    const uint8_t* data;
+    void * data;
     size_t data_size;
-    uint32_t* abort_code;
+    uint32_t * abort_code;
 };
 typedef ec_sdo_config_reg ec_sdo_config_reg_t;
 
@@ -77,7 +78,7 @@ class EtherCAT_Slave_Base
     uint32_t product_code;   // 定义从站设备的产品标识
     uint32_t assign_activate_word; // 定义从站用于配置DC的控制字
 
-    uint8_t *domain_pd;                            // Process Data 过程数据
+    uint8_t *domain_pd;             // Process Data 过程数据，用于配合指针偏移量读取数据
     ec_domain_t *domain;            // 域
     ec_domain_state_t domain_state; // 域状态
 
@@ -91,7 +92,7 @@ class EtherCAT_Slave_Base
     virtual void Get_PDO_Entry_Reg() = 0;
     virtual void Get_Sync_Info() = 0;
     virtual void Get_SDO_Config_Reg() = 0;
-    virtual void Add_Slave_To_Master(EtherCAT_Master& Master) = 0;
+    virtual void Add_Slave_To_Master(EtherCAT_Master& _Master) = 0;
     virtual void Read_Data() = 0;
     virtual void Write_Data() = 0;
     virtual void Slave_Exit() = 0;

@@ -14,7 +14,6 @@ void EtherCAT_Master::EtherCAT_Master_Config(){
     EtherCAT_Master_Config_Slave_PDO_Entry();
 #ifdef ENABLE_DC
     EtherCAT_Master_Config_Slave_DC();
-    ecrt_master_select_reference_clock(master, NULL);
 #endif
 #ifdef ENABLE_SDO
     EtherCAT_Master_Config_Slave_SDO();
@@ -149,25 +148,58 @@ void EtherCAT_Master::EtherCAT_Master_Config_Slave_DC(){
         ecrt_slave_config_dc(Slave->slave_config, Slave->assign_activate_word, TASK_PERIOD_NS, SHIFT_NS, 0, 0);
         ETHERCAT_MESSAGE("*Success to config DC Clock for Slave %d*", i);
     }
+    ecrt_master_select_reference_clock(master, NULL);
 }
 
 void EtherCAT_Master::EtherCAT_Master_Config_Slave_SDO(){
     EtherCAT_Slave_Base * Slave;
     for(int i = 0; i < Slaves.size(); ++i){
         Slave = Slaves[i];
-        // 该处也可以使用 ecrt_slave_config_sdo 函数进行配置
         if((*(Slave->sdo_config_regs)).index != 0){
             const ec_sdo_config_reg_t *sdo_config_reg = Slave->sdo_config_regs;
             while((*sdo_config_reg).index != 0){
-                // if(0 > ecrt_master_sdo_download(master, Slave->position, (*sdo_config_reg).index, (*sdo_config_reg).subindex, (*sdo_config_reg).data, (*sdo_config_reg).data_size, (*sdo_config_reg).abort_code))
-                // {
-                //     ETHERCAT_ERROR("*Config SDO %04X %02X error! Abort code: %04X*", (*sdo_config_reg).index, (*sdo_config_reg).subindex, *((*sdo_config_reg).abort_code));
-                // }
-                if(0 > ecrt_slave_config_sdo(Slave->slave_config, (*sdo_config_reg).index, (*sdo_config_reg).subindex, (*sdo_config_reg).data, (*sdo_config_reg).data_size)
-                )
+                // ** 使用ecrt_master_sdo_download函数进行配置 **
+                /* if(0 > ecrt_master_sdo_download(master, Slave->position, (*sdo_config_reg).index, (*sdo_config_reg).subindex, (uint8_t*)((*sdo_config_reg).data), (*sdo_config_reg).data_size, (*sdo_config_reg).abort_code))
+                {
+                    ETHERCAT_ERROR("*Config SDO %04X %02X error! Abort code: %04X*", (*sdo_config_reg).index, (*sdo_config_reg).subindex, *((*sdo_config_reg).abort_code));
+                } */
+
+                // ** 使用ecrt_master_sdo_download_complete函数进行配置 **
+                /* if(0 > ecrt_master_sdo_download_complete(master, Slave->position, (*sdo_config_reg).index, (*sdo_config_reg).subindex, (uint8_t*)((*sdo_config_reg).data), (*sdo_config_reg).data_size, (*sdo_config_reg).abort_code))
+                {
+                    ETHERCAT_ERROR("*Config SDO %04X %02X error! Abort code: %04X*", (*sdo_config_reg).index, (*sdo_config_reg).subindex, *((*sdo_config_reg).abort_code));
+                } */
+
+                // ** 使用ecrt_slave_config_sdo函数进行配置 **
+                if(0 > ecrt_slave_config_sdo(Slave->slave_config, (*sdo_config_reg).index, (*sdo_config_reg).subindex, (uint8_t*)((*sdo_config_reg).data), (*sdo_config_reg).data_size))
                 {
                     ETHERCAT_ERROR("*Config SDO %04X %02X error!*", (*sdo_config_reg).index, (*sdo_config_reg).subindex);
                 }
+
+                // ** 使用ecrt_slave_config_sdo8、ecrt_slave_config_sdo16、ecrt_slave_config_sdo32函数进行配置 **
+                 /* switch((*sdo_config_reg).data_size){
+                    case 1:
+                        if(0 > ecrt_slave_config_sdo8(Slave->slave_config, (*sdo_config_reg).index, (*sdo_config_reg).subindex, *((uint8_t *)((*sdo_config_reg).data))))
+                        {
+                            ETHERCAT_ERROR("*Config SDO %04X %02X error!*", (*sdo_config_reg).index, (*sdo_config_reg).subindex);
+                        }
+                        break;
+                    case 2:
+                        if(0 > ecrt_slave_config_sdo16(Slave->slave_config, (*sdo_config_reg).index, (*sdo_config_reg).subindex, *((uint16_t *)((*sdo_config_reg).data))))
+                        {
+                            ETHERCAT_ERROR("*Config SDO %04X %02X error!*", (*sdo_config_reg).index, (*sdo_config_reg).subindex);
+                        }
+                        break;
+                    case 4:
+                        if(0 > ecrt_slave_config_sdo32(Slave->slave_config, (*sdo_config_reg).index, (*sdo_config_reg).subindex, *((uint32_t *)((*sdo_config_reg).data))))
+                        {
+                            ETHERCAT_ERROR("*Config SDO %04X %02X error!*", (*sdo_config_reg).index, (*sdo_config_reg).subindex);
+                        }
+                        break;
+                    default:
+                        ETHERCAT_ERROR("*Cannot Config SDO %04X %02X*", (*sdo_config_reg).index, (*sdo_config_reg).subindex);
+                        break;
+                }  */
                 sdo_config_reg++;
             }
             ETHERCAT_MESSAGE("*Success to config SDO for Slave %d*", i);
@@ -182,6 +214,9 @@ void EtherCAT_Master::EtherCAT_Master_Config_Slave_SDO(){
 void EtherCAT_Master::EtherCAT_Master_Activate(){
     // 激活主站master
     // ETHERCAT_INFO("Activating master...");
+    struct timespec startTime;
+    clock_gettime(CLOCK_REALTIME, &startTime);
+    ecrt_master_application_time(master, TIMESPEC2NS(startTime));
     if (ecrt_master_activate(master))
     {
         ETHERCAT_ERROR("*Failed to activate EtherCAT Master %d!*", master_index);
